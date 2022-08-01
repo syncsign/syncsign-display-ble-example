@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SyncSign Display BLE Control Example</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.0.0-beta3/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.0.0-beta3/js/bootstrap.bundle.min.js"></script>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>SyncSign Display Example</h1>
+      <p>Render display over BLE</p>
+      <form>
+        <button class="btn btn-primary" id="scan">Scan</button>
+        <button class="btn btn-primary" id="disconnect" disabled>Disconnect</button>
+        <hr />
+        <div class="input-group mb-3">
+          <span class="input-group-text">CustomField 1</span>
+          <input
+            type="text"
+            id="custom-field1"
+            class="form-control"
+            placeholder="<=16 characters"
+          />
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">CustomField 2</span>
+          <input
+            type="text"
+            id="custom-field2"
+            class="form-control"
+            placeholder="<=16 characters"
+          />
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">DisplayId</span>
+          <input
+            type="text"
+            id="display-id"
+            class="form-control"
+            placeholder="<=12 characters"
+          />
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">CustomField 3</span>
+          <input
+            type="text"
+            id="custom-field3"
+            class="form-control"
+            placeholder="<=32 characters"
+          />
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">QR Code</span>
+          <input
+            type="text"
+            id="qrcode"
+            class="form-control"
+            placeholder="https://xxxx"
+          />
+        </div>
+        <button class="btn btn-primary" id="send" disabled>Send to Display</button>
+        <hr/>
+        <p>
+          <span id="data-sent">N</span> /
+          <span id="draw-screen">N</span>
+        </p>
+      </form>
+    </div>
+
+    <script>
+      log = console.log;
+      function isWebBluetoothEnabled() {
+        if (navigator.bluetooth) {
+          return true;
+        } else {
+          console.log(
+            "Web Bluetooth API is not available.\n" +
+              'Please make sure the "Experimental Web Platform features" flag is enabled.'
+          );
+          return false;
+        }
+      }
+    </script>
+    <script src="./js/app.js"></script>
+    <script>
+      document
+        .querySelector("#scan")
+        .addEventListener("click", function (event) {
+          event.stopPropagation();
+          event.preventDefault();
+
+          if (isWebBluetoothEnabled()) onScanButtonClick();
+        });
+      document
+        .querySelector("#disconnect")
+        .addEventListener("click", function (event) {
+          event.stopPropagation();
+          event.preventDefault();
+
+          if (isWebBluetoothEnabled()) onDisconnectButtonClick();
+        });
+      document
+        .querySelector("#send")
+        .addEventListener("click", function (event) {
+          event.stopPropagation();
+          event.preventDefault();
+
+          if (isWebBluetoothEnabled()) onSendTextOnly();
+        });
+    </script>
+  </body>
+</html>
