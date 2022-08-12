@@ -20,7 +20,7 @@ const ACK_SUBTYPE_DRAW_ERR = 0x01;
 let bleMtuSize = DEFAULT_BLE_MTU;
 
 function onScanButtonClick() {
-  let options = { filters: [{ services: [SERVICE_UUID] }] };
+  let options = { filters: [{ services: [SERVICE_UUID] }, { name: 'SyncSign-Display-Lite' }, { name: 'SyncSign' }] };
 
   bluetoothDevice = null;
   console.log("Requesting Bluetooth Device...");
