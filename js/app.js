@@ -1,6 +1,7 @@
 let bluetoothDevice;
 let charNotify;
 let charWrite;
+let timeCharWrite;
 
 const DEFAULT_BLE_MTU = 20;
 const TXT_ONLY_MAGIC = 0x0D;
@@ -8,6 +9,9 @@ const TXT_ONLY_MAGIC = 0x0D;
 const SERVICE_UUID = 0xfff0;
 const CHAR_NOTIFY = "0000fff2-0000-1000-8000-00805f9b34fb"; // 0xFFF1
 const CHAR_WRITE = "0000fff2-0000-1000-8000-00805f9b34fb"; // 0xFFF2
+
+const TIME_SERVICE_UUID = 0x1805
+const TIME_CHAR_WRITE = "00002a2b-0000-1000-8000-00805f9b34fb" //0x2a2b
 
 const ACK_TYPE_LINK = 0x00;
 const ACK_SUBTYPE_LINK_OK = 0x00;
@@ -20,7 +24,8 @@ const ACK_SUBTYPE_DRAW_ERR = 0x01;
 let bleMtuSize = DEFAULT_BLE_MTU;
 
 function onScanButtonClick() {
-  let options = { filters: [{ services: [SERVICE_UUID] }, { name: 'SyncSign-Display-Lite' }, { name: 'SyncSign' }] };
+  //let options = { filters: [{ services: [SERVICE_UUID] }, { name: 'SyncSign-Display-Lite' }, { name: 'SyncSign' }] };
+  let options = { filters: [{ services: [SERVICE_UUID] },{ namePrefix: "greenbird-" }] };
 
   bluetoothDevice = null;
   console.log("Requesting Bluetooth Device...");
@@ -43,6 +48,7 @@ async function connect() {
   try {
     charWrite = null;
     charNotify = null;
+    timeCharWrite = null;
     console.log("Connecting to Bluetooth Device...");
     let server = await bluetoothDevice.gatt.connect();
     console.log("> Bluetooth Device connected");
@@ -63,6 +69,7 @@ async function connect() {
     }
   } catch (error) {
     document.querySelector("#send").disabled = true;
+    document.querySelector("#calibration-time").disabled = true;
     document.querySelector("#disconnect").disabled = true;
     console.error("Argh! " + error);
   }
@@ -70,14 +77,17 @@ async function connect() {
 
 async function enumerateGatt(server) {
   const services = await server.getPrimaryServices();
-  console.log(services);
+  // console.log("services", services);
   const sPromises = services.map(async (service) => {
     const characteristics = await service.getCharacteristics();
     const cPromises = characteristics.map(async (characteristic) => {
-      let descriptors = await characteristic.getDescriptors();
-      descriptors = descriptors.map(
-        (descriptor) => `\t\t|_descriptor: ${descriptor.uuid}`
-      );
+      // issue: https://github.com/WebBluetoothCG/web-bluetooth/issues/532
+      // let descriptors = await characteristic.getDescriptors();
+      // descriptors = descriptors.map(
+      //   (descriptor) => `\t\t|_descriptor: ${descriptor.uuid}`
+      // );
+      // console.log("characteristic", characteristic)
+      let descriptors = []
       descriptors.unshift(`\t|_characteristic: ${characteristic.uuid}`);
       if (characteristic.uuid === CHAR_NOTIFY) {
         charNotify = characteristic;
@@ -86,6 +96,10 @@ async function enumerateGatt(server) {
         charWrite = characteristic;
         document.querySelector("#send").disabled = false;
         document.querySelector("#disconnect").disabled = false;
+      }
+      if (characteristic.uuid === TIME_CHAR_WRITE) {
+        timeCharWrite = characteristic;
+        document.querySelector("#calibration-time").disabled = false;
       }
       return descriptors.join("\n");
     });
@@ -145,13 +159,38 @@ async function writeDataChunk(data) {
   pkt = data.slice(0, bleMtuSize); // splite by MTU
   remain = data.slice(bleMtuSize);
   let typedArray = new Uint8Array(pkt);
-  console.log("   sending chunk", typedArray.buffer);
+  console.log("   sending chunk", data);
   await charWrite
-    .writeValueWithResponse(typedArray.buffer)
+    .writeValueWithResponse(data.buffer)
     .then(async () => {
       console.log("data sent", typedArray.length);
       if (remain.length) {
         await writeDataChunk(remain);
+      } else {
+        console.log("All chunks(s) sent.");
+      }
+    })
+    .catch((e) => {
+      console.log(e);
+    });
+}
+
+async function writeTimeDataChunk(data) {
+  // send data splited by MTU, then send the remaining in recursion
+
+  if (data === "" || data === null || data === undefined) return;
+
+  pkt = data.slice(0, bleMtuSize); // splite by MTU
+  remain = data.slice(bleMtuSize);
+  let typedArray = new Uint8Array(pkt);
+  console.log("sending chunk", typedArray.buffer);
+  console.log(timeCharWrite)
+  await timeCharWrite
+    .writeValueWithResponse(typedArray.buffer)
+    .then(async () => {
+      console.log("data sent", typedArray.length);
+      if (remain.length) {
+        await writeTimeDataChunk(remain);
       } else {
         console.log("All chunks(s) sent.");
       }
@@ -206,6 +245,7 @@ function onDisconnected(event) {
   // Object event.target is Bluetooth Device getting disconnected.
   console.log("> Bluetooth Device disconnected");
   document.querySelector("#send").disabled = true;
+  document.querySelector("#calibration-time").disabled = true;
   document.querySelector("#disconnect").disabled = true;
 }
 
@@ -287,4 +327,40 @@ async function onSendTextOnly() {
   } catch (error) {
     console.error(error);
   }
+}
+
+async function onSendTimeDate() {
+  const today = new Date();
+  //  [year]2B + [month]1B + [day]1B + [hour]1B + [minute]1B +[second]1B + [week]1B  + [fraction_256]1B: 00 + [adjust_reason]1B: 01
+  let year =  today.getFullYear()
+  let moth =  today.getMonth()
+  let date =  today.getDate()
+  let hours =  today.getHours()
+  let minutes =  today.getMinutes()
+  let seconds =  today.getSeconds()
+  let day =  today.getDay()
+  let dateTime = `${year}/${moth + 1}/${date} ${hours}:${minutes}:${seconds}`
+  let drawTime = document.querySelector("#draw-time");
+  drawTime.innerHTML = dateTime;
+  let data = new Uint8Array([
+      year >> 8,
+      year & 0xff,
+      moth + 1,
+      date,
+      hours,
+      minutes,
+      seconds,
+      day,
+      0x00,
+      0x01,
+  ]);
+  try {
+    // updateDeviceStatus("RESET", null);
+    console.log("start send ...")
+    // Send current time to display
+    await writeTimeDataChunk(data);
+  } catch (error) {
+    console.error(error);
+  }
+  console.log(data);
 }
