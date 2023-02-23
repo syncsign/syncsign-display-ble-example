@@ -25,7 +25,7 @@ let bleMtuSize = DEFAULT_BLE_MTU;
 
 function onScanButtonClick() {
   //let options = { filters: [{ services: [SERVICE_UUID] }, { name: 'SyncSign-Display-Lite' }, { name: 'SyncSign' }] };
-  let options = { filters: [{ services: [SERVICE_UUID] },{ namePrefix: "greenbird-" }] };
+  let options = { filters: [{ services: [SERVICE_UUID,TIME_SERVICE_UUID] },{ namePrefix: "greenbird-" },{ name: 'SyncSign-Display-Lite' }, { name: 'SyncSign' }] };
 
   bluetoothDevice = null;
   console.log("Requesting Bluetooth Device...");
@@ -339,12 +339,12 @@ async function onSendTimeDate() {
   let minutes =  today.getMinutes()
   let seconds =  today.getSeconds()
   let day =  today.getDay()
-  let dateTime = `${year}/${moth + 1}/${date} ${hours}:${minutes}:${seconds}`
+  let dateTime = `${date}/${moth + 1}/${year} ${day} ${hours}:${minutes}:${seconds}`
   let drawTime = document.querySelector("#draw-time");
   drawTime.innerHTML = dateTime;
   let data = new Uint8Array([
-      year >> 8,
       year & 0xff,
+      year >> 8,
       moth + 1,
       date,
       hours,
