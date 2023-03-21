@@ -122,7 +122,7 @@ async function sendTextOnly(templateId, strings) {
   for (i = 0; i < strings.length; i++) {
     if (strings[i].length <= 0x7f) {
       let enc = new TextEncoder();
-      let len = new Uint8Array([strings[i].length & 0x7f]);
+      let len = new Uint8Array([enc.encode(strings[i]).length & 0x7f]);
       let text = enc.encode(strings[i]);
       let mergedArray = new Uint8Array(
         textData.length + len.length + text.length
@@ -315,9 +315,14 @@ async function onSendTextOnly() {
   let customField3 = document.querySelector("#custom-field3").value;
   let displayId = document.querySelector("#display-id").value;
   let qrcode = document.querySelector("#qrcode").value;
+  let tplId = parseInt(document.querySelector("#tpl-id").value);
+  if (tplId < 0 || tplId > 4) {
+    tplId = 0
+  }
+  console.info("tplId=",tplId);
   try {
     updateDeviceStatus("RESET", null);
-    await sendTextOnly(0, [
+    await sendTextOnly(tplId, [
       customField1,
       customField2,
       displayId,
