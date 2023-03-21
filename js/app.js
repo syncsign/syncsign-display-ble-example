@@ -159,7 +159,7 @@ async function writeDataChunk(data) {
   pkt = data.slice(0, bleMtuSize); // splite by MTU
   remain = data.slice(bleMtuSize);
   let typedArray = new Uint8Array(pkt);
-  console.log("   sending chunk", data);
+  // console.log("   sending chunk", data);
   await charWrite
     .writeValueWithResponse(data.buffer)
     .then(async () => {
