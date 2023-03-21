@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SyncSign Display BLE Control Example</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.0.0-beta3/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.0.0-beta3/js/bootstrap.bundle.min.js"></script>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>SyncSign Display Example</h1>
+      <p>Render display over BLE</p>
+      <form>
+        <button class="btn btn-primary" id="scan">Scan</button>
+        <button class="btn btn-primary" id="disconnect" disabled>Disconnect</button>
+        <p>提示: 所有字符编码采用utf-8</p>
+        <hr />
+        <div class="input-group mb-3">
+          <span class="input-group-text">二氧化碳</span>
+          <input
+            type="text"
+            id="custom-field1"
+            class="form-control"
+            placeholder="最多4个字符，如浓度为1000"
+          />
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">PM 2.5</span>
+          <input
+            type="text"
+            id="custom-field2"
+            class="form-control"
+            placeholder="最多5个字符，如23.54"
+          />
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">温度</span>
+          <input
+            type="text"
+            id="display-id"
+            class="form-control"
+            placeholder="最多4个字符，如温度25.4"
+          />
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">湿度</span>
+          <input
+            type="text"
+            id="custom-field3"
+            class="form-control"
+            placeholder="最多4个字符，如湿度56.4"
+          />
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">光线强弱</span>
+          <input
+            type="text"
+            id="qrcode"
+            class="form-control"
+            placeholder="例如：很弱 较弱 较强 很强"
+          />
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">指定的模板编号</span>
+          <input
+            type="text"
+            id="tpl-id"
+            class="form-control"
+            placeholder="目前只有2个模板,所以范围：0~1"
+          />
+        </div>
+        <button class="btn btn-primary" id="send" disabled>Send to Display</button>
+        <hr/>
+        <p>
+          <span id="data-sent">N</span> /
+          <span id="draw-screen">N</span>
+        </p>
+        <p>
+            <button class="btn btn-primary" id="calibration-time" disabled style="display:none;">Calibration Time</button>
+            <div style="font-family: Arial, sans-serif;display:none;">
+              <span id="draw-time">N</span>
+            </div>
+        </p>
+      </form>
+    </div>
+
+    <script>
+      log = console.log;
+      function isWebBluetoothEnabled() {
+        if (navigator.bluetooth) {
+          return true;
+        } else {
+          console.log(
+            "Web Bluetooth API is not available.\n" +
+              'Please make sure the "Experimental Web Platform features" flag is enabled.'
+          );
+          return false;
+        }
+      }
+    </script>
+    <script src="../js/app.js"></script>
+    <script>
+      document
+        .querySelector("#scan")
+        .addEventListener("click", function (event) {
+          event.stopPropagation();
+          event.preventDefault();
+
+          if (isWebBluetoothEnabled()) onScanButtonClick();
+        });
+      document
+        .querySelector("#disconnect")
+        .addEventListener("click", function (event) {
+          event.stopPropagation();
+          event.preventDefault();
+
+          if (isWebBluetoothEnabled()) onDisconnectButtonClick();
+        });
+      document
+        .querySelector("#send")
+        .addEventListener("click", function (event) {
+          event.stopPropagation();
+          event.preventDefault();
+
+          if (isWebBluetoothEnabled()) onSendTextOnly();
+        });
+      document
+        .querySelector("#calibration-time")
+        .addEventListener("click", function (event) {
+          event.stopPropagation();
+          event.preventDefault();
+          if (isWebBluetoothEnabled()) onSendTimeDate();
+        });
+    </script>
+  </body>
+</html>
