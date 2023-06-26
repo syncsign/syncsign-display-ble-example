@@ -338,27 +338,25 @@ async function onSendTextOnly() {
 }
 
 async function onSendTimeDate() {
-  const today = new Date();
-  //  [year]2B + [month]1B + [day]1B + [hour]1B + [minute]1B +[second]1B + [week]1B  + [fraction_256]1B: 00 + [adjust_reason]1B: 01
-  let year =  today.getFullYear()
-  let moth =  today.getMonth()
-  let date =  today.getDate()
-  let hours =  today.getHours()
-  let minutes =  today.getMinutes()
-  let seconds =  today.getSeconds()
-  let day =  today.getDay()
-  let dateTime = `${date}/${moth + 1}/${year} ${day} ${hours}:${minutes}:${seconds}`
-  let drawTime = document.querySelector("#draw-time");
-  drawTime.innerHTML = dateTime;
+  let timestamp = Math.floor(Date.now() / 1000);
+  let date = new Date(timestamp * 1000);
+  date.setUTCHours(date.getUTCHours() + 8);
+  let utcYear = date.getUTCFullYear();
+  let utcMonth = date.getUTCMonth() + 1;
+  let utcDateOfMonth = date.getUTCDate();
+  let utcHour = date.getUTCHours();
+  let utcMinute = date.getUTCMinutes();
+  let utcSecond = date.getUTCSeconds();
+  let utcDay = date.getUTCDay();
   let data = new Uint8Array([
-      year & 0xff,
-      year >> 8,
-      moth + 1,
-      date,
-      hours,
-      minutes,
-      seconds,
-      day,
+      utcYear & 0xff,
+      utcYear >> 8,
+      utcMonth,
+      utcDateOfMonth,
+      utcHour,
+      utcMinute,
+      utcSecond,
+      utcDay,
       0x00,
       0x01,
   ]);
