@@ -185,6 +185,7 @@ async function writeTimeDataChunk(data) {
   let typedArray = new Uint8Array(pkt);
   console.log("sending chunk", typedArray.buffer);
   console.log(timeCharWrite)
+  let sendTimeStatus = document.querySelector("#send-time-status");
   await timeCharWrite
     .writeValueWithResponse(typedArray.buffer)
     .then(async () => {
@@ -193,9 +194,11 @@ async function writeTimeDataChunk(data) {
         await writeTimeDataChunk(remain);
       } else {
         console.log("All chunks(s) sent.");
+        sendTimeStatus.innerHTML = "Calibration Time Ok";
       }
     })
     .catch((e) => {
+      sendTimeStatus.innerHTML = "Calibration Time Failed";
       console.log(e);
     });
 }
