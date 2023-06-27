@@ -348,6 +348,9 @@ async function onSendTimeDate() {
   let utcMinute = date.getUTCMinutes();
   let utcSecond = date.getUTCSeconds();
   let utcDay = date.getUTCDay();
+  let dateTime = `${utcDateOfMonth}/${utcMonth + 1}/${utcYear} ${utcDay} ${utcHour}:${utcMinute}:${utcSecond}`
+  let drawTime = document.querySelector("#draw-time");
+  drawTime.innerHTML = dateTime;
   let data = new Uint8Array([
       utcYear & 0xff,
       utcYear >> 8,
